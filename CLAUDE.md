@@ -20,7 +20,7 @@
 **目前實作範圍**：
 
 - 首頁：3 篇模擬文章卡片 + 書籤按鈕（Optimistic Update）
-- API：`GET /api/bookmarks`（列出書籤）、`POST /api/bookmarks`（切換書籤）
+- API：`POST /api/bookmarks`（切換書籤）+ `OPTIONS`（CORS preflight）。注意：**無 GET endpoint** — 列表查詢函式 `getUserBookmarks` 已實作於 `src/lib/bookmarks.ts`，但尚未對外暴露為路由
 - DB schema：users / articles / bookmarks 三張表（Neon PostgreSQL）
 - Demo 模式：userId = 1 硬編碼，無真實登入系統
 
@@ -46,6 +46,11 @@ npm run dev          # http://localhost:3000
 
 # 建置（需有效 DATABASE_URL）
 npm run build
+
+# 測試（Vitest，不連真實 DB）
+npm test                          # 跑全部
+npx vitest run __tests__/bookmarks.test.ts   # 跑單一檔
+npx vitest                        # watch 模式
 
 # DB schema 推送
 npx drizzle-kit push
@@ -107,16 +112,17 @@ techblog-演練-網站/
 
 ## 5. Testing Approach（測試框架與執行規範）
 
-目前無自動化測試框架（教學示範專案）。驗證方式：
+**框架**：Vitest（node 環境，設定見 `vitest.config.ts`）。測試檔放 `__tests__/`，**不**混在 `src/` 內。
 
 | 驗證層 | 方法 |
 |--------|------|
-| 型別 | `npx tsc --noEmit` — 0 錯誤才算通過 |
-| Build | `npm run build` — 必須乾淨通過（無 build error）|
-| 手動 smoke | `npm run dev` → 瀏覽器點擊書籤按鈕確認狀態切換 |
-| API | `curl http://localhost:3000/api/bookmarks` 確認 200 回應 |
+| 單元/特徵測試 | `npm test`（= `vitest run`）。現有 `__tests__/bookmarks.test.ts` 是 `getUserBookmarks` 的**特徵測試（characterization tests）**：用 `vi.mock("../src/db")` 攔截 Drizzle 鏈式呼叫、捕捉傳給 `.limit()` 的值，**全程不連真實 DB** |
+| 型別 | `npx tsc --noEmit`（無 node_modules 時可能誤抓舊版 tsc；以 `next build` 自帶型別檢查為準） |
+| Build | `npm run build` — 必須乾淨通過 |
+| 手動 smoke | `npm run dev` → 瀏覽器點書籤按鈕確認狀態切換 |
+| API | `curl -X POST http://localhost:3000/api/bookmarks -H 'Content-Type: application/json' -d '{"articleId":1}'`（無 GET handler，勿用 GET 驗證） |
 
-**加測試前的規則**：如需加 Jest / Vitest，測試檔案放 `__tests__/` 目錄，不混在 `src/app/` 或 `src/lib/` 內。
+**改 `src/lib/bookmarks.ts` 行為時**：特徵測試會變紅，代表既有行為被改動 — 確認是預期變更後才更新測試，別反射性改測試遷就程式碼。mock 用 `vi.hoisted` 提升共享狀態，避免 TDZ。
 
 ---
 
