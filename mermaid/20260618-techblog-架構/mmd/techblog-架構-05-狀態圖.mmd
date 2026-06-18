@@ -1,0 +1,12 @@
+stateDiagram-v2
+  [*] --> 未書籤
+  [*] --> 已書籤
+  未書籤 --> 載入中: 點擊 樂觀加入
+  已書籤 --> 載入中: 點擊 樂觀移除
+  載入中 --> 已書籤: API 回傳 true
+  載入中 --> 未書籤: API 回傳 false
+  載入中 --> 未書籤: 請求失敗則 revert
+  note right of 載入中
+    isLoading 防重複點擊
+    失敗時還原 previousState
+  end note

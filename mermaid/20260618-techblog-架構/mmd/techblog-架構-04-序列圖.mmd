@@ -1,0 +1,23 @@
+sequenceDiagram
+  actor U as 使用者
+  participant B as BookmarkButton
+  participant R as route.ts
+  participant L as lib/bookmarks
+  participant D as Neon DB
+  U->>B: 點擊書籤
+  B->>B: 樂觀翻轉 UI 狀態
+  B->>R: POST /api/bookmarks {articleId}
+  R->>R: 驗證 articleId 為正整數
+  R->>L: toggleBookmark(1, articleId)
+  L->>D: INSERT onConflictDoNothing returning
+  alt 有回傳列
+    D-->>L: 新增成功
+    L-->>R: true
+  else 已存在
+    L->>D: DELETE bookmark
+    D-->>L: 刪除完成
+    L-->>R: false
+  end
+  R-->>B: 200 {bookmarked}
+  B->>B: 以 API 回傳值校正最終狀態
+  Note over B: 任一步失敗則 revert 樂觀更新

@@ -13,10 +13,12 @@
 **目的**：示範《Claude Code Pro》書籍附錄提示詞範本（Appendix A）的實際產出成果。以書籤（Bookmark）功能為核心，展示 Next.js 16 App Router + Drizzle ORM + Neon PostgreSQL 全端整合流程。
 
 **目標受眾**：
+
 - 閱讀《Claude Code Pro》的開發者，想看「提示詞範本真的能生出什麼」
 - 學習 Next.js 16 App Router 的工程師
 
 **目前實作範圍**：
+
 - 首頁：3 篇模擬文章卡片 + 書籤按鈕（Optimistic Update）
 - API：`GET /api/bookmarks`（列出書籤）、`POST /api/bookmarks`（切換書籤）
 - DB schema：users / articles / bookmarks 三張表（Neon PostgreSQL）
@@ -37,6 +39,7 @@
 | drizzle-kit | 0.31.x | schema push / migration |
 
 **執行方式**：
+
 ```bash
 # 開發
 npm run dev          # http://localhost:3000
@@ -49,6 +52,7 @@ npx drizzle-kit push
 ```
 
 **環境變數**（`.env.local`）：
+
 ```
 DATABASE_URL=postgresql://...  # Neon PostgreSQL 連線字串
 ```
@@ -72,10 +76,15 @@ techblog-演練-網站/
 │       └── bookmarks.ts      # Drizzle pgTable 定義
 ├── lib/
 │   └── bookmarks.ts          # DB 操作邏輯（toggleBookmark / getUserBookmarks）
+├── docs/
+│   └── architecture.md       # 系統架構文件（arch-deck Phase 1 產出）
+├── mermaid/
+│   └── 20260618-techblog-架構/  # Mermaid 圖表合輯（mmd/ + png/ + .pptx）
 └── drizzle.config.ts         # Drizzle Kit 設定
 ```
 
 **設計模式**：
+
 - Server Component 負責資料讀取，Client Component 僅負責互動（BookmarkButton）
 - API route 統一處理 auth 驗證、參數驗證（400）、錯誤回應（500 不洩漏細節）
 - DB export 用 Lazy Init + Proxy：`neon()` 只在第一次查詢時呼叫，避免 Next.js build 期間拋錯

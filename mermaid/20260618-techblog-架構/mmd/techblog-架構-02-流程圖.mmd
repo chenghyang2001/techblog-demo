@@ -1,0 +1,16 @@
+flowchart TD
+  U[使用者點書籤] --> OPT[樂觀翻轉 UI]
+  OPT --> F["fetch POST /api/bookmarks"]
+  F --> V{"articleId 正整數?"}
+  V -->|否| E400[回 400 參數錯誤]
+  V -->|是| T["toggleBookmark(userId, articleId)"]
+  T --> INS[INSERT onConflictDoNothing]
+  INS --> C{"有回傳列?"}
+  C -->|有| ADD[新增成功 return true]
+  C -->|無| DEL[DELETE 後 return false]
+  ADD --> R[回 200 bookmarked]
+  DEL --> R
+  R --> SYNC[BookmarkButton 校正狀態]
+  E400 --> REV[還原樂觀更新]
+  T -. DB 例外 .-> E500[回 500 不洩漏細節]
+  E500 --> REV

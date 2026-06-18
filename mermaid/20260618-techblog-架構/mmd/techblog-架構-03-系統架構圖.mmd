@@ -1,0 +1,11 @@
+block-beta
+  columns 1
+  browser["瀏覽器：page.tsx 首頁 + BookmarkButton（樂觀更新）"]
+  route["app/api/bookmarks/route.ts（POST / OPTIONS + 驗證 + CORS）"]
+  dal["lib/bookmarks.ts 資料存取層（toggleBookmark）"]
+  dbidx["db/index.ts（Lazy Init + Proxy → neon-http）"]
+  neon["Neon Serverless PostgreSQL（users / articles / bookmarks）"]
+  browser --> route
+  route --> dal
+  dal --> dbidx
+  dbidx --> neon
