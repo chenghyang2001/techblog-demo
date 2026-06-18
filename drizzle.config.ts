@@ -9,7 +9,7 @@ import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./db/schema/bookmarks.ts",
+  schema: "./src/db/schema/bookmarks.ts",
   out: "./drizzle",
   dbCredentials: {
     // DATABASE_URL 必須在 .env.local 或 Vercel 環境變數中設定

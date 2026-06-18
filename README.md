@@ -11,10 +11,10 @@
 | 步驟 | 模板 | 產出 |
 |------|------|------|
 | 1 | B-01 新功能鷹架 | 檔案清單規劃 |
-| 2 | G-01 Schema 設計 | `db/schema/bookmarks.ts` |
-| 3 | G-01 Schema 設計 | `lib/bookmarks.ts`（含 race condition 修正） |
-| 4 | H-01 REST API 客戶端封裝 | `app/api/bookmarks/route.ts` |
-| 5 | I-01 React 元件生成 | `components/BookmarkButton.tsx` |
+| 2 | G-01 Schema 設計 | `src/db/schema/bookmarks.ts` |
+| 3 | G-01 Schema 設計 | `src/lib/bookmarks.ts`（含 race condition 修正） |
+| 4 | H-01 REST API 客戶端封裝 | `src/app/api/bookmarks/route.ts` |
+| 5 | I-01 React 元件生成 | `src/components/BookmarkButton.tsx` |
 | 6 | D-05 API 端點測試 | 測試案例（見 `../claude-code-pro-resources/demo-1/`） |
 | 7 | C-01 標準除錯協議 | Race condition 診斷 + 修復 |
 
@@ -24,20 +24,21 @@
 
 ```
 techblog-demo/
-├── app/
-│   ├── api/bookmarks/
-│   │   └── route.ts          # POST /api/bookmarks（來自 H-01 模板）
-│   ├── layout.tsx
-│   └── page.tsx              # 示範首頁（3 篇文章 + BookmarkButton）
-├── components/
-│   └── BookmarkButton.tsx    # 樂觀更新書籤按鈕（來自 I-01 模板）
-├── db/
-│   ├── index.ts              # Neon PostgreSQL + Drizzle 連線
-│   └── schema/
-│       └── bookmarks.ts      # 資料庫 Schema（來自 G-01 模板）
-├── lib/
-│   └── bookmarks.ts          # CRUD 資料存取層（含 race condition 修正）
-├── drizzle.config.ts         # Drizzle Kit 遷移設定
+├── src/                      # 所有 source 集中於此（Next.js src/ 慣例）
+│   ├── app/
+│   │   ├── api/bookmarks/
+│   │   │   └── route.ts      # POST /api/bookmarks（來自 H-01 模板）
+│   │   ├── layout.tsx
+│   │   └── page.tsx          # 示範首頁（3 篇文章 + BookmarkButton）
+│   ├── components/
+│   │   └── BookmarkButton.tsx # 樂觀更新書籤按鈕（來自 I-01 模板）
+│   ├── db/
+│   │   ├── index.ts          # Neon PostgreSQL + Drizzle 連線
+│   │   └── schema/
+│   │       └── bookmarks.ts  # 資料庫 Schema（來自 G-01 模板）
+│   └── lib/
+│       └── bookmarks.ts      # CRUD 資料存取層（含 race condition 修正）
+├── drizzle.config.ts         # Drizzle Kit 遷移設定（schema 指向 ./src/db/...）
 └── .env.local.example        # 環境變數範本
 ```
 
@@ -82,7 +83,7 @@ Response: { "bookmarked": true, "articleId": 1, "message": "Article bookmarked s
 
 ### Race Condition 修正（來自 C-01 模板診斷）
 
-`lib/bookmarks.ts` 的 `toggleBookmark` 使用 `INSERT ... ON CONFLICT DO NOTHING` 而非「先查再寫」：
+`src/lib/bookmarks.ts` 的 `toggleBookmark` 使用 `INSERT ... ON CONFLICT DO NOTHING` 而非「先查再寫」：
 
 ```typescript
 // 錯誤做法（有 race condition）

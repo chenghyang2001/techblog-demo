@@ -12,26 +12,26 @@ techblog-demo 是一個展示《Claude Code Pro》提示詞範本產出成果的
 
 ```
                  瀏覽器（Client）
-        ┌──────────────────────────────┐
-        │  Home (Server Component)      │  ← 靜態 Mock 文章，無 DB
-        │   └─ BookmarkButton ×3        │  ← 'use client'，樂觀更新
-        └───────────────┬──────────────┘
-                        │ fetch POST /api/bookmarks
-                        ▼
-        ┌──────────────────────────────┐
-        │  app/api/bookmarks/route.ts   │  ← 驗證 + CORS + 錯誤處理
-        │   POST / OPTIONS              │
-        └───────────────┬──────────────┘
-                        │ toggleBookmark(userId, articleId)
-                        ▼
-        ┌──────────────────────────────┐
-        │  lib/bookmarks.ts （DAL）     │  ← Drizzle 查詢邏輯
-        └───────────────┬──────────────┘
-                        │ db (Proxy → lazy neon-http)
-                        ▼
-        ┌──────────────────────────────┐
-        │  Neon Serverless PostgreSQL   │  ← users / articles / bookmarks
-        └──────────────────────────────┘
+        ┌──────────────────────────────────┐
+        │  Home (Server Component)         │  ← 靜態 Mock 文章，無 DB
+        │   └─ BookmarkButton ×3           │  ← 'use client'，樂觀更新
+        └─────────────────┬────────────────┘
+                          │ fetch POST /api/bookmarks
+                          ▼
+        ┌──────────────────────────────────┐
+        │  src/app/api/bookmarks/route.ts  │  ← 驗證 + CORS + 錯誤處理
+        │   POST / OPTIONS                 │
+        └─────────────────┬────────────────┘
+                          │ toggleBookmark(userId, articleId)
+                          ▼
+        ┌──────────────────────────────────┐
+        │  src/lib/bookmarks.ts (DAL)      │  ← Drizzle 查詢邏輯
+        └─────────────────┬────────────────┘
+                          │ db (Proxy → lazy neon-http)
+                          ▼
+        ┌──────────────────────────────────┐
+        │  Neon Serverless PostgreSQL      │  ← users / articles / bookmarks
+        └──────────────────────────────────┘
 ```
 
 定位：**教學示範**。無真實登入系統（`userId` 硬編碼為 1），無自動化測試框架，DB 僅在書籤切換路徑被觸發。
@@ -42,18 +42,18 @@ techblog-demo 是一個展示《Claude Code Pro》提示詞範本產出成果的
 
 | 層級 | 檔案 | 行數 | 角色 |
 |------|------|:---:|------|
-| 進入點（前端） | `app/page.tsx` | 118 | Server Component；定義 3 篇靜態 Mock 文章並渲染卡片格線（手機單欄 / 平板雙欄 / 桌面三欄） |
-| 根 layout | `app/layout.tsx` | 33 | HTML 骨架 + Geist 字型；`lang="en"`、全高 flex 容器 |
-| 互動元件 | `components/BookmarkButton.tsx` | 115 | Client Component（`'use client'`）；樂觀更新 + 失敗還原 + ARIA（`aria-pressed` / `aria-label`） |
-| 進入點（後端） | `app/api/bookmarks/route.ts` | 89 | REST 端點；**僅 `POST` + `OPTIONS`**（無 `GET`，與 CLAUDE.md 描述不符）。負責 JSON 解析、`articleId` 正整數驗證、CORS、500 不洩漏細節 |
-| 資料存取層 | `lib/bookmarks.ts` | 108 | 4 個 DAL 函式：`toggleBookmark`（已接線）、`isBookmarked` / `getUserBookmarks` / `getBookmarkCount`（已實作但尚未被 route 呼叫） |
-| DB 連線 | `db/index.ts` | 31 | Lazy Init + `Proxy`；`neon()` 只在首次查詢時呼叫，避免 build 期驗證 URL 拋錯 |
-| Schema | `db/schema/bookmarks.ts` | 56 | Drizzle `pgTable` 定義 3 張表 + 推導型別 |
+| 進入點（前端） | `src/app/page.tsx` | 118 | Server Component；定義 3 篇靜態 Mock 文章並渲染卡片格線（手機單欄 / 平板雙欄 / 桌面三欄） |
+| 根 layout | `src/app/layout.tsx` | 33 | HTML 骨架 + Geist 字型；`lang="en"`、全高 flex 容器 |
+| 互動元件 | `src/components/BookmarkButton.tsx` | 115 | Client Component（`'use client'`）；樂觀更新 + 失敗還原 + ARIA（`aria-pressed` / `aria-label`） |
+| 進入點（後端） | `src/app/api/bookmarks/route.ts` | 89 | REST 端點；**僅 `POST` + `OPTIONS`**（無 `GET`）。負責 JSON 解析、`articleId` 正整數驗證、CORS、500 不洩漏細節 |
+| 資料存取層 | `src/lib/bookmarks.ts` | 108 | 4 個 DAL 函式：`toggleBookmark`（已接線）、`isBookmarked` / `getUserBookmarks` / `getBookmarkCount`（已實作但尚未被 route 呼叫） |
+| DB 連線 | `src/db/index.ts` | 31 | Lazy Init + `Proxy`；`neon()` 只在首次查詢時呼叫，避免 build 期驗證 URL 拋錯 |
+| Schema | `src/db/schema/bookmarks.ts` | 56 | Drizzle `pgTable` 定義 3 張表 + 推導型別 |
 | 遷移設定 | `drizzle.config.ts` | 19 | dialect postgresql，schema 指向 bookmarks.ts，`drizzle-kit push` 推送 |
 | 框架設定 | `next.config.ts` | 7 | 空白預設設定 |
 | 外部服務 | Neon Serverless PostgreSQL | — | 透過 `@neondatabase/serverless` 的 neon-http transport 連線（不支援多語句 transaction） |
 
-### 資料表結構（`db/schema/bookmarks.ts`）
+### 資料表結構（`src/db/schema/bookmarks.ts`）
 
 | 表 | 關鍵欄位 | 約束 |
 |----|---------|------|
@@ -89,8 +89,8 @@ Client Component (BookmarkButton) ── useState 管理互動狀態
 
 ### 關鍵約束
 
-- **DB 連線懶初始化**：`db/index.ts` 用 `Proxy` 包裝，`getDb()` 在首次屬性存取時才呼叫 `neon()`，確保 `npm run build` 期間不因缺 `DATABASE_URL` 而失敗。
-- **route 不直接碰 db**：`route.ts` 一律透過 `lib/bookmarks.ts` 的函式，不 import `db`。
+- **DB 連線懶初始化**：`src/db/index.ts` 用 `Proxy` 包裝，`getDb()` 在首次屬性存取時才呼叫 `neon()`，確保 `npm run build` 期間不因缺 `DATABASE_URL` 而失敗。
+- **route 不直接碰 db**：`route.ts` 一律透過 `src/lib/bookmarks.ts` 的函式，不 import `db`。
 - **CORS preflight**：`OPTIONS` handler 為跨來源 `POST` 必要項，移除會導致跨域請求收到 405。
 
 ---
