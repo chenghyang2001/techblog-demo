@@ -44,7 +44,7 @@ export default function Home() {
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-5 flex items-center gap-3">
           <span className="text-2xl font-bold text-blue-600 tracking-tight">
-            TechBlog
+            楊政憲-TechBlog
           </span>
           <span className="text-gray-400">|</span>
           <span className="text-sm text-gray-500">工程師的技術分享平台</span>
@@ -58,7 +58,8 @@ export default function Home() {
             🎯 這是使用 Prompt Library 模板建立的 Bookmark 功能示範
           </p>
           <p className="mt-1 text-xs text-blue-600">
-            本頁面展示 BookmarkButton 元件如何整合至文章列表，Mock 資料直接定義於 Server Component，無需資料庫查詢。
+            本頁面展示 BookmarkButton 元件如何整合至文章列表，Mock
+            資料直接定義於 Server Component，無需資料庫查詢。
           </p>
         </div>
 
@@ -90,9 +91,7 @@ export default function Home() {
               </h3>
 
               {/* 作者 */}
-              <p className="text-sm text-gray-500">
-                作者：{article.author}
-              </p>
+              <p className="text-sm text-gray-500">作者：{article.author}</p>
 
               {/* 書籤按鈕（Client Component，含樂觀更新） */}
               <div className="mt-auto pt-2">
@@ -110,7 +109,8 @@ export default function Home() {
       {/* 頁尾說明 */}
       <footer className="mt-12 border-t border-gray-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-5 text-center text-xs text-gray-400">
-          BookmarkButton 元件支援 Optimistic Update — 點擊立即反映 UI，API 確認後同步
+          BookmarkButton 元件支援 Optimistic Update — 點擊立即反映 UI，API
+          確認後同步
         </div>
       </footer>
     </div>
