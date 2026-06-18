@@ -3,8 +3,20 @@
  * 依循 G-01 Schema Design template：cursor-based pagination + race-condition-safe toggle
  */
 import { db } from "../db";
-import { bookmarks, type Bookmark, type NewBookmark } from "../db/schema/bookmarks";
+import {
+  bookmarks,
+  type Bookmark,
+  type NewBookmark,
+} from "../db/schema/bookmarks";
 import { eq, and, desc, count, lt } from "drizzle-orm";
+
+/** 複合鍵述詞：同一使用者對同一文章的書籤（讀寫路徑共用，單一真相來源） */
+function byUserAndArticle(userId: number, articleId: number) {
+  return and(
+    eq(bookmarks.user_id, userId),
+    eq(bookmarks.article_id, articleId),
+  );
+}
 
 /**
  * 檢查指定使用者是否已書籤某篇文章
@@ -12,12 +24,12 @@ import { eq, and, desc, count, lt } from "drizzle-orm";
  */
 export async function isBookmarked(
   userId: number,
-  articleId: number
+  articleId: number,
 ): Promise<boolean> {
   const result = await db
     .select({ id: bookmarks.id })
     .from(bookmarks)
-    .where(and(eq(bookmarks.user_id, userId), eq(bookmarks.article_id, articleId)))
+    .where(byUserAndArticle(userId, articleId))
     .limit(1);
 
   return result.length > 0;
@@ -34,12 +46,13 @@ export async function isBookmarked(
 export async function getUserBookmarks(
   userId: number,
   limit: number = 20,
-  cursor?: number
+  cursor?: number,
 ): Promise<Bookmark[]> {
   // 嚴格比較 undefined：cursor 值為 0 時不應被當成「無 cursor」
-  const conditions = cursor !== undefined
-    ? and(eq(bookmarks.user_id, userId), lt(bookmarks.id, cursor))
-    : eq(bookmarks.user_id, userId);
+  const conditions =
+    cursor !== undefined
+      ? and(eq(bookmarks.user_id, userId), lt(bookmarks.id, cursor))
+      : eq(bookmarks.user_id, userId);
 
   // 排序與 cursor 一律使用同一欄位 id DESC，避免 created_at 與 id 不相關導致分頁跳頁或漏筆
   return db
@@ -78,7 +91,7 @@ export async function getBookmarkCount(articleId: number): Promise<number> {
 // switch to neon-serverless WebSocket transport and wrap in db.transaction().
 export async function toggleBookmark(
   userId: number,
-  articleId: number
+  articleId: number,
 ): Promise<boolean> {
   const newBookmark: NewBookmark = { user_id: userId, article_id: articleId };
 
@@ -95,14 +108,7 @@ export async function toggleBookmark(
   }
 
   // 插入無效（已存在）→ 刪除書籤
-  await db
-    .delete(bookmarks)
-    .where(
-      and(
-        eq(bookmarks.user_id, userId),
-        eq(bookmarks.article_id, articleId)
-      )
-    );
+  await db.delete(bookmarks).where(byUserAndArticle(userId, articleId));
 
   return false;
 }
