@@ -67,7 +67,7 @@ techblog-演練-網站/
 │   ├── page.tsx              # Server Component：首頁文章列表
 │   ├── layout.tsx            # 根 layout
 │   └── api/bookmarks/
-│       └── route.ts          # REST API：GET + POST + OPTIONS
+│       └── route.ts          # REST API：POST + OPTIONS（無 GET）
 ├── components/
 │   └── BookmarkButton.tsx    # Client Component：Optimistic Update
 ├── db/
