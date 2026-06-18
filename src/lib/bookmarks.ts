@@ -37,7 +37,7 @@ export async function isBookmarked(
 
 /**
  * 取得使用者的書籤列表（cursor-based 分頁）
- * 使用 cursor（上一頁最後一筆的 created_at）而非 OFFSET，避免大資料集效能衰退
+ * 使用 cursor（上一頁最後一筆的 id）而非 OFFSET，避免大資料集效能衰退
  *
  * @param userId   使用者 ID
  * @param limit    每頁筆數，預設 20
@@ -54,13 +54,17 @@ export async function getUserBookmarks(
       ? and(eq(bookmarks.user_id, userId), lt(bookmarks.id, cursor))
       : eq(bookmarks.user_id, userId);
 
+  // 封頂 limit：防止呼叫端傳超大值造成近乎全表掃描；下限 1 避免 Postgres LIMIT 負數拋錯
+  const MAX_PAGE_SIZE = 100;
+  const safeLimit = Math.min(Math.max(1, Math.trunc(limit)), MAX_PAGE_SIZE);
+
   // 排序與 cursor 一律使用同一欄位 id DESC，避免 created_at 與 id 不相關導致分頁跳頁或漏筆
   return db
     .select()
     .from(bookmarks)
     .where(conditions)
     .orderBy(desc(bookmarks.id))
-    .limit(limit);
+    .limit(safeLimit);
 }
 
 /**
