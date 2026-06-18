@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# Git Bash / MSYS 偶發崩潰留下的 stack dump
+*.stackdump
+
 # debug
 npm-debug.log*
 yarn-debug.log*
